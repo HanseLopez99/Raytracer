@@ -1,31 +1,38 @@
 import struct
 from collections import namedtuple
 import numpy as np
-
+from figures import *
+from lights import *
 from math import cos, sin, tan, pi
-
 from obj import Obj
 
-V2 = namedtuple('Point2', ['x', 'y'])
-V3 = namedtuple('Point3', ['x', 'y', 'z'])
-V4 = namedtuple('Point4', ['x', 'y', 'z', 'w'])
+
+STEPS = 1
+MAX_RECURSION_DEPTH = 3
+
+V2 = namedtuple("Point2", ["x", "y"])
+V3 = namedtuple("Point3", ["x", "y", "z"])
+V4 = namedtuple("Point4", ["x", "y", "z", "w"])
+
 
 def char(c):
-    #1 byte
-    return struct.pack('=c', c.encode('ascii'))
+    # 1 byte
+    return struct.pack("=c", c.encode("ascii"))
+
 
 def word(w):
-    #2 bytes
-    return struct.pack('=h', w)
+    # 2 bytes
+    return struct.pack("=h", w)
+
 
 def dword(d):
-    #4 bytes
-    return struct.pack('=l', d)
+    # 4 bytes
+    return struct.pack("=l", d)
+
 
 def color(r, g, b):
-    return bytes([int(b * 255),
-                  int(g * 255),
-                  int(r * 255)] )
+    return bytes([int(b * 255), int(g * 255), int(r * 255)])
+
 
 def baryCoords(A, B, C, P):
 
@@ -45,6 +52,7 @@ def baryCoords(A, B, C, P):
     else:
         return u, v, w
 
+
 class Raytracer(object):
     def __init__(self, width, height):
 
@@ -53,17 +61,18 @@ class Raytracer(object):
 
         self.fov = 60
         self.nearPlane = 0.1
-        self.camPosition = V3(0,0,0)
+        self.camPosition = V3(0, 0, 0)
 
-        self.scene = [ ]
-        self.lights = [ ]
+        self.scene = []
+        self.lights = []
 
+        self.envMap = None
 
-        self.clearColor = color(0,0,0)
-        self.currColor = color(1,1,1)
+        self.clearColor = color(0, 0, 0)
+        self.currColor = color(1, 1, 1)
 
-        self.glViewport(0,0,self.width, self.height)
-        
+        self.glViewport(0, 0, self.width, self.height)
+
         self.glClear()
 
     def glViewport(self, posX, posY, width, height):
@@ -73,30 +82,27 @@ class Raytracer(object):
         self.vpHeight = height
 
     def glClearColor(self, r, g, b):
-        self.clearColor = color(r,g,b)
+        self.clearColor = color(r, g, b)
 
     def glColor(self, r, g, b):
-        self.currColor = color(r,g,b)
+        self.currColor = color(r, g, b)
 
     def glClear(self):
-        self.pixels = [[ self.clearColor for y in range(self.height)]
-                         for x in range(self.width)]
+        self.pixels = [
+            [self.clearColor for y in range(self.height)] for x in range(self.width)
+        ]
 
-
-
-
-    def glClearViewport(self, clr = None):
+    def glClearViewport(self, clr=None):
         for x in range(self.vpX, self.vpX + self.vpWidth):
             for y in range(self.vpY, self.vpY + self.vpHeight):
-                self.glPoint(x,y,clr)
+                self.glPoint(x, y, clr)
 
-
-    def glPoint(self, x, y, clr = None): # Window Coordinates
+    def glPoint(self, x, y, clr=None):  # Window Coordinates
         if (0 <= x < self.width) and (0 <= y < self.height):
             self.pixels[x][y] = clr or self.currColor
 
     def scene_intersect(self, orig, dir, sceneObj):
-        depth = float('inf')
+        depth = float("inf")
         intersect = None
 
         for obj in self.scene:
@@ -109,48 +115,48 @@ class Raytracer(object):
 
         return intersect
 
-    def cast_ray(self, orig, dir):
-        intersect = self.scene_intersect(orig, dir, None)
+    def cast_ray(self, orig, dir, sceneObj=None, recursion=0):
+        intersect = self.scene_intersect(orig, dir, sceneObj)
 
-        if intersect == None:
-            return None
+        if intersect == None or recursion >= MAX_RECURSION_DEPTH:
+            if self.envMap:
+                return self.envMap.getEnvColor(dir)
+            else:
+                return (
+                    self.clearColor[0] / 255,
+                    self.clearColor[1] / 255,
+                    self.clearColor[2] / 255,
+                )
 
         material = intersect.sceneObj.material
 
-        finalColor = np.array([0,0,0])
-        objectColor = np.array([material.diffuse[0],
-                                material.diffuse[1],
-                                material.diffuse[2]])
+        finalColor = np.array([0, 0, 0])
+        objectColor = np.array(
+            [material.diffuse[0], material.diffuse[1], material.diffuse[2]]
+        )
 
-        dirLightColor = np.array([0,0,0])
-        ambLightColor = np.array([0,0,0])
+        if material.matType == OPAQUE:
+            for light in self.lights:
+                diffuseColor = light.getDiffuseColor(intersect, self)
+                specColor = light.getSpecColor(intersect, self)
+                shadowIntensity = light.getShadowIntensity(intersect, self)
 
+                lightColor = (diffuseColor + specColor) * (1 - shadowIntensity)
 
-        for light in self.lights:
-            if light.lightType == 0: # directional light
-                diffuseColor = np.array([0,0,0])
+                finalColor = np.add(finalColor, lightColor)
 
-                light_dir = np.array(light.direction) * -1
-                intensity = np.dot(intersect.normal, light_dir)
-                intensity = float(max(0, intensity))
+        elif material.matType == REFLECTIVE:
+            reflect = reflectVector(intersect.normal, np.array(dir) * -1)
+            reflectColor = self.cast_ray(
+                intersect.point, reflect, intersect.sceneObj, recursion + 1
+            )
+            reflectColor = np.array(reflectColor)
 
-                diffuseColor = np.array([intensity * light.color[0] * light.intensity,
-                                         intensity * light.color[1] * light.intensity,
-                                         intensity * light.color[2] * light.intensity])
+            specColor = np.array([0, 0, 0])
+            for light in self.lights:
+                specColor = np.add(specColor, light.getSpecColor(intersect, self))
 
-                #Shadows
-                shadow_intensity = 0
-                shadow_intersect = self.scene_intersect(intersect.point, light_dir, intersect.sceneObj)
-                if shadow_intersect:
-                    shadow_intensity = 1
-
-
-                dirLightColor = np.add(dirLightColor, diffuseColor * (1 - shadow_intensity))
-
-            elif light.lightType == 2: # ambient light
-                ambLightColor = np.array(light.color) * light.intensity
-
-        finalColor = dirLightColor + ambLightColor
+            finalColor = reflectColor + specColor
 
         finalColor *= objectColor
 
@@ -158,22 +164,19 @@ class Raytracer(object):
         g = min(1, finalColor[1])
         b = min(1, finalColor[2])
 
-        return (r,g,b)
-
-
-
+        return (r, g, b)
 
     def glRender(self):
-        for y in range(self.vpY, self.vpY + self.vpHeight + 1):
-            for x in range(self.vpX, self.vpX + self.vpWidth + 1):
+        # Proyeccion
+        t = tan((self.fov * np.pi / 180) / 2) * self.nearPlane
+        r = t * self.vpWidth / self.vpHeight
+
+        for y in range(self.vpY, self.vpY + self.vpHeight + 1, STEPS):
+            for x in range(self.vpX, self.vpX + self.vpWidth + 1, STEPS):
                 # Pasar de coordenadas de ventana a
                 # coordenadas NDC (-1 a 1)
                 Px = ((x + 0.5 - self.vpX) / self.vpWidth) * 2 - 1
                 Py = ((y + 0.5 - self.vpY) / self.vpHeight) * 2 - 1
-
-                # Proyeccion
-                t = tan((self.fov * np.pi / 180) / 2) * self.nearPlane
-                r = t * self.vpWidth / self.vpHeight
 
                 Px *= r
                 Py *= t
@@ -184,23 +187,19 @@ class Raytracer(object):
                 rayColor = self.cast_ray(self.camPosition, direction)
 
                 if rayColor is not None:
-                    rayColor = color(rayColor[0],rayColor[1],rayColor[2])
+                    rayColor = color(rayColor[0], rayColor[1], rayColor[2])
                     self.glPoint(x, y, rayColor)
-
-
-
-
 
     def glFinish(self, filename):
         with open(filename, "wb") as file:
             # Header
-            file.write(bytes('B'.encode('ascii')))
-            file.write(bytes('M'.encode('ascii')))
+            file.write(bytes("B".encode("ascii")))
+            file.write(bytes("M".encode("ascii")))
             file.write(dword(14 + 40 + (self.width * self.height * 3)))
             file.write(dword(0))
             file.write(dword(14 + 40))
 
-            #InfoHeader
+            # InfoHeader
             file.write(dword(40))
             file.write(dword(self.width))
             file.write(dword(self.height))
@@ -213,13 +212,7 @@ class Raytracer(object):
             file.write(dword(0))
             file.write(dword(0))
 
-            #Color table
+            # Color table
             for y in range(self.height):
                 for x in range(self.width):
                     file.write(self.pixels[x][y])
-
-
-
-
-
-
