@@ -158,6 +158,37 @@ class Raytracer(object):
 
             finalColor = reflectColor + specColor
 
+        elif material.matType == TRANSPARENT:
+            outside = np.dot(dir, intersect.normal) < 0
+            bias = intersect.normal * 0.001
+
+            reflect = reflectVector(intersect.normal, np.array(dir) * -1)
+
+            reflectOrigin = (
+                np.add(intersect.point, bias)
+                if outside
+                else np.subtract(intersect.point, bias)
+            )
+            reflectColor = self.cast_ray(reflectOrigin, reflect, None, recursion + 1)
+            reflectColor = np.array(reflectColor)
+
+            kr = fresnel(intersect.normal, dir, material.ior)
+
+            refractColor = np.array([0, 0, 0])
+            if kr < 1:
+                refract = refractVector(intersect.normal, dir, material.ior)
+                refractOrigin = (
+                    np.subtract(intersect.point, bias)
+                    if outside
+                    else np.add(intersect.point, bias)
+                )
+                refractColor = self.cast_ray(
+                    refractOrigin, refract, None, recursion + 1
+                )
+                refractColor = np.array(refractColor)
+
+            finalColor = reflectColor * kr + refractColor * (1 - kr) + specColor
+
         finalColor *= objectColor
 
         r = min(1, finalColor[0])
