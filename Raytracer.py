@@ -4,8 +4,8 @@ from figures import *
 from lights import *
 
 
-width = 520
-height = 520
+width = 1024
+height = 1024
 
 # Materiales
 
@@ -36,9 +36,14 @@ rtx.envMap = Texture("parkingLot.bmp")
 rtx.lights.append(AmbientLight(intensity=0.1))
 rtx.lights.append(DirectionalLight(direction=(-1, -1, -1), intensity=0.8))
 
-rtx.scene.append(Plane(position=(0, -10, 0), normal=(0, 1, 0), material=brick))
-rtx.scene.append(Plane(position=(-20, 0, 0), normal=(1, 0, 0), material=stone))
+# rtx.scene.append(Plane(position=(0, -10, 0), normal=(0, 1, 0), material=brick))
+# rtx.scene.append(Plane(position=(-20, 0, 0), normal=(1, 0, 0), material=stone))
 # rtx.scene.append(Plane(position=(15, 30, -15), normal=(-1, -1, -1), material=mirror))
+
+rtx.scene.append(AABB(position=(-2, -3, -10), size=(2, 2, 2), material=mirror))
+rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=glass))
+rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=diamond))
+rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=marble))
 
 rtx.glRender()
 

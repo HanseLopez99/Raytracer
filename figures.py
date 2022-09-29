@@ -1,3 +1,4 @@
+from code import interact
 import numpy as np
 
 WHITE = (1, 1, 1)
@@ -93,3 +94,80 @@ class Plane(object):
                 )
 
         return None
+
+
+class AABB(object):
+    # Axis Aligned Bounding Box
+    def __init__(self, position, size, material):
+        self.position = position
+        self.size = size
+        self.material = material
+
+        self.planes = []
+
+        halfSizes = [0, 0, 0]
+
+        halfSizes[0] = size[0] / 2
+        halfSizes[1] = size[1] / 2
+        halfSizes[2] = size[2] / 2
+
+        # Sides
+        self.planes.append(
+            Plane(np.add(position, (halfSizes[0], 0, 0)), (1, 0, 0), material)
+        )
+        self.planes.append(
+            Plane(np.subtract(position, (halfSizes[0], 0, 0)), (-1, 0, 0), material)
+        )
+
+        # Up and down
+        self.planes.append(
+            Plane(np.add(position, (0, halfSizes[1], 0)), (0, 1, 0), material)
+        )
+        self.planes.append(
+            Plane(np.subtract(position, (0, halfSizes[1], 0)), (0, -1, 0), material)
+        )
+
+        # Front and back
+        self.planes.append(
+            Plane(np.add(position, (0, 0, halfSizes[2])), (0, 0, 1), material)
+        )
+        self.planes.append(
+            Plane(np.subtract(position, (0, 0, halfSizes[2])), (0, 0, -1), material)
+        )
+
+        self.boundsMin = [0, 0, 0]
+        self.boundsMax = [0, 0, 0]
+
+        epsilon = 0.001
+
+        for i in range(3):
+            self.boundsMin[i] = position[i] - (epsilon + halfSizes[i])
+            self.boundsMax[i] = position[i] + (epsilon + halfSizes[i])
+
+    def ray_intersect(self, orig, dir):
+        intersect = None
+        t = float("inf")
+
+        for plane in self.planes:
+            planeInter = plane.ray_intersect(orig, dir)
+
+            if planeInter is not None:
+                planePoint = planeInter.point
+
+                if self.boundsMin[0] <= planePoint[0] <= self.boundsMax[0]:
+                    if self.boundsMin[1] <= planePoint[1] <= self.boundsMax[1]:
+                        if self.boundsMin[2] <= planePoint[2] <= self.boundsMax[2]:
+                            if planeInter.distance < t:
+                                t = planeInter.distance
+                                intersect = planeInter
+
+        if intersect is None:
+            return None
+
+        return Intersect(
+            distance=t,
+            point=intersect.point,
+            normal=intersect.normal,
+            texcoords=None,
+            sceneObj=self,
+        )
