@@ -17,6 +17,8 @@ marble = Material(
     diffuse=(0.8, 0.8, 0.8), texture=Texture("marble.bmp"), spec=32, matType=REFLECTIVE
 )
 
+marble2 = Material(spec=64, texture=Texture("marble.bmp"), matType=REFLECTIVE)
+
 canica = Material(
     diffuse=(0.8, 0.8, 1.0),
     texture=Texture("whiteMarble.bmp"),
@@ -48,6 +50,8 @@ rtx.scene.append(
 # rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=glass))
 # rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=diamond))
 # rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=marble))
+
+rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=marble))
 
 rtx.glRender()
 
