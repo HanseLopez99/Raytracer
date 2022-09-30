@@ -161,6 +161,36 @@ class AABB(object):
                                 t = planeInter.distance
                                 intersect = planeInter
 
+                            # Tex coords
+
+                            u, v = 0, 0
+
+                            # Las uvs de las caras de los lados
+                            if abs(plane.normal[0]) > 0:
+                                # Mapear uvs para el eje x, usando las coordenadas de Y y Z
+                                u = (planeInter.point[1] - self.boundsMin[1]) / (
+                                    self.size[1]
+                                )
+                                v = (planeInter.point[2] - self.boundsMin[2]) / (
+                                    self.size[2]
+                                )
+                            elif abs(plane.normal[1]) > 0:
+                                # Mapear uvs para el eje y, usando las coordenadas de X y Z
+                                u = (planeInter.point[0] - self.boundsMin[0]) / (
+                                    self.size[0]
+                                )
+                                v = (planeInter.point[2] - self.boundsMin[2]) / (
+                                    self.size[2]
+                                )
+                            elif abs(plane.normal[2]) > 0:
+                                # Mapear uvs para el eje z, usando las coordenadas de X y Y
+                                u = (planeInter.point[0] - self.boundsMin[0]) / (
+                                    self.size[0]
+                                )
+                                v = (planeInter.point[1] - self.boundsMin[1]) / (
+                                    self.size[1]
+                                )
+
         if intersect is None:
             return None
 
@@ -168,7 +198,7 @@ class AABB(object):
             distance=t,
             point=intersect.point,
             normal=intersect.normal,
-            texcoords=None,
+            texcoords=(u, v),
             sceneObj=self,
         )
 
