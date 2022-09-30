@@ -171,3 +171,30 @@ class AABB(object):
             texcoords=None,
             sceneObj=self,
         )
+
+
+class Disk(object):
+    def __init__(self, position, radius, normal, material):
+        self.plane = Plane(position, normal, material)
+        self.material = material
+        self.radius = radius
+
+    def ray_intersect(self, orig, dir):
+        intersect = self.plane.ray_intersect(orig, dir)
+
+        if intersect is None:
+            return None
+
+        contact = np.subtract(intersect.point, self.plane.position)
+        contact = np.linalg.norm(contact)
+
+        if contact > self.radius:
+            return None
+
+        return Intersect(
+            distance=intersect.distance,
+            point=intersect.point,
+            normal=intersect.normal,
+            texcoords=None,
+            sceneObj=self,
+        )

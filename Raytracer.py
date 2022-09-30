@@ -4,8 +4,8 @@ from figures import *
 from lights import *
 
 
-width = 1024
-height = 1024
+width = 512
+height = 512
 
 # Materiales
 
@@ -40,10 +40,14 @@ rtx.lights.append(DirectionalLight(direction=(-1, -1, -1), intensity=0.8))
 # rtx.scene.append(Plane(position=(-20, 0, 0), normal=(1, 0, 0), material=stone))
 # rtx.scene.append(Plane(position=(15, 30, -15), normal=(-1, -1, -1), material=mirror))
 
-rtx.scene.append(AABB(position=(-2, -3, -10), size=(2, 2, 2), material=mirror))
-rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=glass))
-rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=diamond))
-rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=marble))
+rtx.scene.append(
+    Disk(position=(0, -3, -10), normal=(0, 1, 0), radius=3, material=glass)
+)
+
+# rtx.scene.append(AABB(position=(-2, -3, -10), size=(2, 2, 2), material=mirror))
+# rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=glass))
+# rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=diamond))
+# rtx.scene.append(AABB(position=(-2, 2, -10), size=(2, 2, 2), material=marble))
 
 rtx.glRender()
 
