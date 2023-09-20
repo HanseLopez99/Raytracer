@@ -4,14 +4,14 @@ from lights import *
 
 # Create Snowman
 
-width = 1024
-height = 1024
+width = 1920
+height = 1080
 
 # Materiales
-snow = Material(diffuse=(1, 1, 1))
-carrot = Material(diffuse=(1, 0.5, 0))
-black = Material(diffuse=(0, 0, 0))
-lightGray = Material(diffuse=(0.5, 0.5, 0.5))
+snow = Material(diffuse=(1, 1, 1), spec=32)
+carrot = Material(diffuse=(1, 0.5, 0), spec=16)
+black = Material(diffuse=(0, 0, 0), spec=32)
+lightGray = Material(diffuse=(0.5, 0.5, 0.5), spec=32)
 
 
 rtx = Raytracer(width, height)
