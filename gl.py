@@ -1,6 +1,7 @@
 import struct
 from collections import namedtuple
 import numpy as np
+import math_1 as mt
 from figures import *
 from lights import *
 from math import cos, sin, tan, pi
@@ -129,46 +130,44 @@ class Raytracer(object):
                 )
 
         material = intersect.sceneObj.material
-
-        finalColor = np.array([0, 0, 0])
-        objectColor = np.array(
-            [material.diffuse[0], material.diffuse[1], material.diffuse[2]]
+        finalColor = mt.Vector(0, 0, 0)
+        objectColor = mt.Vector(
+            material.diffuse[0], material.diffuse[1], material.diffuse[2]
         )
 
         if material.matType == OPAQUE:
             for light in self.lights:
-                diffuseColor = light.getDiffuseColor(intersect, self)
-                specColor = light.getSpecColor(intersect, self)
+                diffuseColor = mt.Vector(*light.getDiffuseColor(intersect, self))
+                specColor = mt.Vector(*light.getSpecColor(intersect, self))
                 shadowIntensity = light.getShadowIntensity(intersect, self)
 
-                lightColor = (diffuseColor + specColor) * (1 - shadowIntensity)
-
-                finalColor = np.add(finalColor, lightColor)
+                lightColor = diffuseColor.add(specColor).multiply(1 - shadowIntensity)
+                finalColor = finalColor.add(lightColor)
 
         elif material.matType == REFLECTIVE:
-            reflect = reflectVector(intersect.normal, np.array(dir) * -1)
-            reflectColor = self.cast_ray(
-                intersect.point, reflect, intersect.sceneObj, recursion + 1
-            )
-            reflectColor = np.array(reflectColor)
+            reflect = reflectVector(intersect.normal, mt.Vector(*dir).multiply(-1))
+            reflectColor = mt.Vector(*self.cast_ray(
+                intersect.point, reflect.values, intersect.sceneObj, recursion + 1
+            ))
 
-            specColor = np.array([0, 0, 0])
+            specColor = mt.Vector(0, 0, 0)
             for light in self.lights:
-                specColor = np.add(specColor, light.getSpecColor(intersect, self))
+                specColor = specColor.add(mt.Vector(*light.getSpecColor(intersect, self)))
 
-            finalColor = reflectColor + specColor
+            finalColor = reflectColor.add(specColor)
 
-        finalColor *= objectColor
+        finalColor = finalColor.elementwise_multiply(objectColor)
 
-        r = min(1, finalColor[0])
-        g = min(1, finalColor[1])
-        b = min(1, finalColor[2])
+        r = min(1, finalColor.values[0])
+        g = min(1, finalColor.values[1])
+        b = min(1, finalColor.values[2])
 
         return (r, g, b)
 
+
     def glRender(self):
         # Proyeccion
-        t = tan((self.fov * np.pi / 180) / 2) * self.nearPlane
+        t = tan((self.fov * mt.pi / 180) / 2) * self.nearPlane
         r = t * self.vpWidth / self.vpHeight
 
         for y in range(self.vpY, self.vpY + self.vpHeight + 1, STEPS):
@@ -182,7 +181,7 @@ class Raytracer(object):
                 Py *= t
 
                 direction = V3(Px, Py, -self.nearPlane)
-                direction = direction / np.linalg.norm(direction)
+                direction = mt.normalize(mt.Vector(*direction))
 
                 rayColor = self.cast_ray(self.camPosition, direction)
 
