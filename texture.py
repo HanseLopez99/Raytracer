@@ -1,5 +1,6 @@
 import struct
-import numpy as np
+import math_1 as mt
+import math
 from numpy import arctan2, arccos, pi
 
 
@@ -36,9 +37,11 @@ class Texture(object):
             return None
 
     def getEnvColor(self, dir):
-        dir = dir / np.linalg.norm(dir)
+        # Normalize the direction vector
+        dir = mt.normalize(mt.Vector(*dir))
 
-        x = int((arctan2(dir[2], dir[0]) / (2 * pi) + 0.5) * self.width)
-        y = int(arccos(-dir[1]) / pi * self.height)
+        # Convert the direction vector to spherical coordinates
+        x = int((math.atan2(dir.values[2], dir.values[0]) / (2 * math.pi) + 0.5) * self.width)
+        y = int(math.acos(-dir.values[1]) / math.pi * self.height)
 
         return self.pixels[y][x]

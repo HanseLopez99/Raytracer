@@ -1,4 +1,6 @@
+import math
 import numpy as np
+import math_1 as mt
 
 WHITE = (1, 1, 1)
 BLACK = (0, 0, 0)
@@ -33,9 +35,11 @@ class Sphere(object):
         self.material = material
 
     def ray_intersect(self, orig, dir):
-        L = np.subtract(self.center, orig)
-        tca = np.dot(L, dir)
-        d = (np.linalg.norm(L) ** 2 - tca**2) ** 0.5
+        L = mt.Vector(*self.center).subtract(mt.Vector(*orig))
+        tca = mt.dot(L, mt.Vector(*dir))
+        
+        # Replacing L.magnitude() with the square root of the dot product of L with itself
+        d = (mt.dot(L, L) - tca**2) ** 0.5
 
         if d > self.radius:
             return None
@@ -51,15 +55,16 @@ class Sphere(object):
             return None
 
         # P = O + t0 * D
-        P = np.add(orig, t0 * np.array(dir))
-        normal = np.subtract(P, self.center)
-        normal = normal / np.linalg.norm(normal)
+        P = mt.Vector(*orig).add(mt.Vector(*dir).multiply(t0))
+        normal = P.subtract(mt.Vector(*self.center))
+        normal = mt.normalize(normal)
 
-        u = 1 - ((np.arctan2(normal[2], normal[0]) / (2 * np.pi)) + 0.5)
-        v = np.arccos(-normal[1]) / np.pi
+        u = 1 - ((math.atan2(normal.values[2], normal.values[0]) / (2 * math.pi)) + 0.5)
+        v = math.acos(-normal.values[1]) / math.pi
 
         uvs = (u, v)
 
         return Intersect(
-            distance=t0, point=P, normal=normal, texcoords=uvs, sceneObj=self
+            distance=t0, point=P.values, normal=normal.values, texcoords=uvs, sceneObj=self
         )
+
