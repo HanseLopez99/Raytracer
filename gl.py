@@ -5,6 +5,7 @@ import numpy as np
 from figures import *
 from lights import *
 from math import cos, sin, tan, pi
+from math_1 import Vector
 from obj import Obj
 
 
@@ -138,6 +139,8 @@ class Raytracer(object):
             for light in self.lights:
                 diffuseColor = mt.Vector(*light.getDiffuseColor(intersect, self))
                 specColor = mt.Vector(*light.getSpecColor(intersect, self))
+
+
                 shadowIntensity = light.getShadowIntensity(intersect, self)
 
                 lightColor = diffuseColor.add(specColor).multiply(1 - shadowIntensity)
@@ -145,7 +148,9 @@ class Raytracer(object):
 
         elif material.matType == REFLECTIVE:
             reflect = reflectVector(intersect.normal, mt.Vector(*dir).multiply(-1))
-            reflectColor = mt.Vector(*self.cast_ray(intersect.point, reflect.values, intersect.sceneObj, recursion + 1))
+            reflectColor = mt.Vector(*self.cast_ray(intersect.point, reflect, intersect.sceneObj, recursion + 1))
+
+
 
             specColor = mt.Vector(0, 0, 0)
             for light in self.lights:
@@ -155,6 +160,8 @@ class Raytracer(object):
 
         elif material.matType == TRANSPARENT:
             outside = mt.dot(dir, intersect.normal) < 0
+            if not isinstance(intersect.normal, Vector):
+                intersect.normal = Vector(*intersect.normal)
             bias = intersect.normal.multiply(0.001)
 
             specColor = mt.Vector(0, 0, 0)
@@ -162,16 +169,21 @@ class Raytracer(object):
                 specColor = specColor.add(mt.Vector(*light.getSpecColor(intersect, self)))
 
             reflect = reflectVector(intersect.normal, mt.Vector(*dir).multiply(-1))
-            reflectOrig = intersect.point.add(bias) if outside else intersect.point.subtract(bias)
-            reflectColor = mt.Vector(*self.cast_ray(reflectOrig.values, reflect.values, None, recursion + 1))
+            pointVector = mt.Vector(*intersect.point)
+            reflectOrig = mt.Vector(*intersect.point).add(bias) if outside else mt.Vector(*intersect.point).subtract(bias)
+
+            reflectColor = mt.Vector(*self.cast_ray(reflectOrig, reflect, None, recursion + 1))
+
 
             kr = fresnel(intersect.normal, dir, material.ior)
 
             refractColor = mt.Vector(0, 0, 0)
             if kr < 1:
                 refract = refractVector(intersect.normal, dir, material.ior)
-                refractOrig = intersect.point.subtract(bias) if outside else intersect.point.add(bias)
-                refractColor = mt.Vector(*self.cast_ray(refractOrig.values, refract.values, None, recursion + 1))
+                refractOrig = mt.Vector(*intersect.point).subtract(bias) if outside else mt.Vector(*intersect.point).add(bias)
+
+                refractColor = mt.Vector(*self.cast_ray(refractOrig, refract, None, recursion + 1))
+
 
             finalColor = reflectColor.multiply(kr).add(refractColor.multiply(1 - kr)).add(specColor)
 

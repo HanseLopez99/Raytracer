@@ -191,13 +191,13 @@ class AmbientLight(object):
         self.color = color
         self.lightType = AMBIENT_LIGHT
 
-    def getDiffuseColor(self):
+    def getDiffuseColor(self, intersect, raytracer):
         diffuseColor = mt.Vector(*self.color).multiply(self.intensity)
         return diffuseColor.values  # Return as a lidst
 
-    def getSpecColor(self):
+    def getSpecColor(self, intersect, raytracer):
         return mt.Vector(0, 0, 0).values  # Return as a list
 
-    def getShadowIntensity(self):
+    def getShadowIntensity(self, intersect, raytracer):
         return 0
 

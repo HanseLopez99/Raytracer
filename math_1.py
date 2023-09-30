@@ -29,6 +29,11 @@ class Vector:
         return iter(self.values)
 
 def dot(v1, v2):
+    if not isinstance(v1, Vector):
+        v1 = Vector(*v1)
+    if not isinstance(v2, Vector):
+        v2 = Vector(*v2)
+
     return sum(a*b for a, b in zip(v1.values, v2.values))
 
 def cross(v1, v2):
