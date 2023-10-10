@@ -43,13 +43,12 @@ def cross(v1, v2):
     return Vector(i, j, k)
 
 def norm(v):
-    return math.sqrt(sum(x**2 for x in v.values))
+    return math.sqrt(sum(x**2 for x in v))
 
-def normalize(v):
-    magnitude = norm(v)
-    if magnitude == 0:
-        raise ValueError("Cannot normalize a zero vector")
-    return Vector(*(x/magnitude for x in v.values))
-
+def normalize_vector(vector):
+    magnitude = math.sqrt(sum(x**2 for x in vector))
+    if magnitude != 0:
+        return [x / magnitude for x in vector]
+    return vector
 # pi
 pi = math.pi
