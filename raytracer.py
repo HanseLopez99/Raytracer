@@ -7,8 +7,8 @@ from lights import *
 from materials import *
 
 
-width = 540
-height = 540
+width = 900
+height = 900
 
 pygame.init()
 
@@ -67,7 +67,7 @@ raytracer.scene.append(AABB(position=(-1,1,-5),size=(1,1,1),material=marble))
 raytracer.scene.append(Disk(position=(2.1,0.6,-5),normal=(-1,0,0),radius=1,material=mirror))
 raytracer.scene.append(Disk(position=(0,0.5,-10),normal=(0,0,-1),radius=1.5,material=mirror))
 raytracer.scene.append(Disk(position=(-2.1,0.6,-5),normal=(-1,0,0),radius=1,material=mirror))
-raytracer.scene.append(Disk(position=(0, -3, -8), normal=(0, 1, 0), radius=3, material=mirror))
+raytracer.scene.append(Disk(position=(0, -3, -6), normal=(0, 1, 0), radius=3, material=mirror))
 
 # Lights
 raytracer.lights.append(AmbientLight(intensity=1))
@@ -88,8 +88,18 @@ while isRunning:
 			if event.key == pygame.K_ESCAPE:
 				isRunning = False
 
-rect = pygame.Rect(0,0,width,height)
-sub = screen.subsurface(rect)
-pygame.image.save(sub,"screenshot.jpg")
+# Ensure the display module is initialized
+pygame.display.init()
+
+# Update the display to ensure all previous draw calls are reflected
+pygame.display.flip()
+
+# Capture the entire screen surface
+screenshot = pygame.Surface((width, height))
+screenshot.blit(screen, (0, 0))
+
+# Save the screenshot
+pygame.image.save(screenshot, "screenshot.jpg")
+
 
 pygame.quit()

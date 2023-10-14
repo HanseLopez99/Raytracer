@@ -41,7 +41,8 @@ class Sphere(Shape):
 
         P = mt.Vector(*orig).add(mt.Vector(*dir).multiply(t0))
         normal = P.subtract(mt.Vector(*self.position))
-        normal = mt.normalize(normal)
+        normal = mt.Vector(*mt.normalize_vector(normal.values))
+
 
         u = (atan2(normal.values[2], normal.values[0]) / (2 * pi)) + 0.5
         v = acos(normal.values[1]) / pi
@@ -50,7 +51,8 @@ class Sphere(Shape):
     
 class Plane(Shape):
     def __init__(self, position, normal, material):
-        self.normal = mt.normalize(mt.Vector(*normal))
+        self.normal = mt.Vector(*mt.normalize_vector(normal))
+
         super().__init__(position, material)
         
     def ray_intersect(self, orig, dir):

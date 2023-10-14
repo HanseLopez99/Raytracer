@@ -29,7 +29,7 @@ def refractVector(normal, incident, n1, n2):
 
     n = n1 / n2
     T = normal.multiply(c1).add(incident).multiply(n).subtract(normal.multiply((1 - n**2 * (1 - c1**2))**0.5))
-    T = mt.normalize(T)
+    T = mt.Vector(*mt.normalize_vector(T.values))
     return T
 
 
@@ -91,7 +91,7 @@ class AmbientLight(Light):
         
 class DirectionalLight(Light):
     def __init__(self, direction=(0,-1,0), intensity=1, color=(1, 1, 1)):
-        self.direction = mt.normalize(mt.Vector(*direction))
+        self.direction = mt.Vector(*mt.normalize_vector(direction))
         super().__init__(intensity, color, "Directional")
         
     def getDiffuseColor(self, intercept):
@@ -110,7 +110,7 @@ class DirectionalLight(Light):
         reflect = reflectVector(intercept.normal, dir)
         
         viewDir = mt.Vector(*viewPos).subtract(mt.Vector(*intercept.point))
-        viewDir = mt.normalize(viewDir)
+        viewDir = mt.Vector(*mt.normalize_vector(viewDir.values))
         
         specIntensity = max(0, mt.dot(viewDir, reflect)) ** intercept.obj.material.spec
         specIntensity *= intercept.obj.material.Ks
@@ -129,7 +129,7 @@ class PointLight(Light):
     def getDiffuseColor(self, intercept):
         dir = self.point.subtract(mt.Vector(*intercept.point))
         R = dir.magnitude()
-        dir = dir.normalize()
+        dir = mt.Vector(*mt.normalize_vector(dir.values))
         
         intensity = mt.dot(intercept.normal, dir) * self.intensity
         intensity *= 1 - intercept.obj.material.Ks
@@ -148,12 +148,12 @@ class PointLight(Light):
     def getSpecularColor(self, intercept, viewPos):
         dir = self.point.subtract(mt.Vector(*intercept.point))
         R = dir.magnitude()
-        dir = dir.normalize()
+        dir = mt.Vector(*mt.normalize_vector(dir.values))
         
         reflect = reflectVector(intercept.normal, dir)
         
         viewDir = mt.Vector(*viewPos).subtract(mt.Vector(*intercept.point))
-        viewDir = viewDir.normalize()
+        viewDir = mt.Vector(*mt.normalize_vector(viewDir.values))
         
         specIntensity = max(0, mt.dot(viewDir, reflect)) ** intercept.obj.material.spec
         specIntensity *= intercept.obj.material.Ks
@@ -166,3 +166,4 @@ class PointLight(Light):
         specColor = [i * specIntensity for i in self.color]
         
         return specColor
+

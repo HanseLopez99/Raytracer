@@ -7,7 +7,7 @@ import pygame
 from materials import *
 from lights import reflectVector, refractVector, totalInternalReflection, fresnel
 
-MAX_RECURSION_DEPTH = 3
+MAX_RECURSION_DEPTH = 5
 
 class RayTracer(object):
     def __init__(self, screen):
@@ -103,10 +103,13 @@ class RayTracer(object):
             texcolor = material.texture.get_at((int(tX), int(tY)))
 
             # Ensure texcolor has the same dimensions as surfaceColor
-            while len(texcolor.values) < len(surfaceColor.values):
+            while len(texcolor) < len(surfaceColor.values):
                 texcolor.values.append(1.0)  # You can set any default value here
 
-            texcolor = mt.Vector(*[i / 255 for i in texcolor.values])
+            while len(surfaceColor.values) < len(list(texcolor)):
+                surfaceColor.values.append(1.0)
+
+            texcolor = mt.Vector(*[i / 255 for i in texcolor])
             surfaceColor = surfaceColor.elementwise_multiply(texcolor)
 
         reflectColor = mt.Vector(0, 0, 0)
@@ -165,6 +168,14 @@ class RayTracer(object):
                 refractColor = refractColor.multiply_scalar(1 - Kr)
                 
         lightColor = ambientColor.add(diffuseColor).add(specularColor).add(reflectColor).add(refractColor)
+        # Ensure surfaceColor has the same dimensions as lightColor
+        while len(surfaceColor.values) < len(lightColor.values):
+            surfaceColor.values.append(1.0)
+
+        # Ensure lightColor has the same dimensions as surfaceColor
+        while len(lightColor.values) < len(surfaceColor.values):
+            lightColor.values.append(1.0)
+
         finalColor = surfaceColor.elementwise_multiply(lightColor)
 
         return [min(1, finalColor.values[0]), min(1, finalColor.values[1]), min(1, finalColor.values[2])]
@@ -192,7 +203,8 @@ class RayTracer(object):
 
                 # Create a ray
                 direction = mt.Vector(Px, Py, -self.nearPlane)
-                direction = mt.normalize(direction)
+                direction = mt.Vector(*mt.normalize_vector(direction.values))
+
 
                 intercept = self.rtCastRay(self.camPosition, direction.values)
 
