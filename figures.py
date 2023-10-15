@@ -165,3 +165,39 @@ class AABB(Shape):
             return None
         
         return Intercept(distance=t, point=intersect.point, normal=intersect.normal, texcoords=(u, v), obj=self)
+
+class Torus(object):
+    def __init__(self, center, major_radius, minor_radius, material):
+        self.center = mt.Vector(*center)
+        self.major_radius = major_radius
+        self.minor_radius = minor_radius
+        self.material = material
+
+
+    def ray_intersect(self, orig, dir):
+        # Initialize coefficients for the quartic equation
+        A = B = C = D = E = 0
+        # ... (This is where you'll substitute the ray's equation into the torus equation and collect terms)
+
+        # Solve the quartic equation to get potential t values
+        # You might need an external method or library to solve the quartic equation
+        t_values = mt.solve_quartic(A, B, C, D, E)
+
+        # Filter out negative t values and find the smallest positive t
+        t_values = [t for t in t_values if t > 0]
+        if not t_values:
+            return None
+        t = min(t_values)
+
+        # Calculate the intersection point
+        P = orig.add(dir.multiply(t))
+        # Calculate the normal at the intersection point
+        normal = ...  # This will require some additional logic using your Vector class
+
+        return Intersect(
+            distance=t,
+            point=list(P),
+            normal=list(normal),
+            texcoords=None,  # You can add texture coordinates logic if needed
+            sceneObj=self
+        )

@@ -40,6 +40,8 @@ earth = Material(texture = earthTexture,spec=64,Ks=0.1,matType=OPAQUE)
 glass = Material(diffuse=(0.9,0.9,0.9),spec=64,Ks=0.15,ior=1.5,matType=TRANSPARENT)
 diamond = Material(diffuse=(0.9,0.9,0.9),spec=128,Ks=0.2,ior=2.417,matType=TRANSPARENT)
 realWater = Material(diffuse=(0.4,0.4,0.9),spec=128,Ks=0.2,ior=1.33,matType=TRANSPARENT)
+torus_material = Material(diffuse=(0.9, 0.5, 0.3), spec=64, Ks=0.2, matType=OPAQUE)
+
 
 
 width = 100
@@ -59,9 +61,13 @@ raytracer.scene.append(Plane(position=(0,height/2,-depth/2),normal=(0,0,1),mater
 # Front wall behind camera
 raytracer.scene.append(Plane(position=(0,height/2,depth/2),normal=(0,0,-1),material=brick))
 
-# AABBS
-raytracer.scene.append(AABB(position=(1,0,-6),size=(1,1,1),material=wall))
-raytracer.scene.append(AABB(position=(-1,1,-5),size=(1,1,1),material=marble))
+# Torus
+torus_center = (0, 0, -5)  # Example position
+major_radius = 2
+minor_radius = 1
+torus = Torus(center=torus_center, major_radius=major_radius, minor_radius=minor_radius, material=torus_material)
+raytracer.scene.append(torus)
+
 
 # Disks
 raytracer.scene.append(Disk(position=(2.1,0.6,-5),normal=(-1,0,0),radius=1,material=mirror))
